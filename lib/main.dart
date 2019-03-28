@@ -49,8 +49,6 @@ class _HomeState extends State<Home> {
           title: Text("QuickMeals"),
         ),
         body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             _buildRecipe(meals["breakfast"]),
             _buildRecipe(meals["lunch"]),
@@ -77,7 +75,11 @@ class _HomeState extends State<Home> {
   }
 
   _buildRecipe(recipe) {
-    if (recipe == null) return Expanded(child: CircularProgressIndicator());
+    if (recipe == null) {
+      return Expanded(
+          child: Container(
+              alignment: Alignment.center, child: CircularProgressIndicator()));
+    }
     return Expanded(
         flex: 1,
         child: Dismissible(
@@ -90,7 +92,23 @@ class _HomeState extends State<Home> {
                 onTap: () async => await canLaunch(recipe.url)
                     ? await launch(recipe.url)
                     : throw 'Could not launch ${recipe.url}',
-                child: Card(child: Text(recipe.title)))));
+                child: Card(
+                    child: Row(children: <Widget>[
+                  Image.network(recipe.img),
+                  Expanded(
+                      child: Column(children: <Widget>[
+                    Center(
+                        child: Text(
+                      recipe.title,
+                      textAlign: TextAlign.center,
+                    )),
+                    Container(
+                        child: Column(children: <Widget>[
+                      Text("Servings: ${recipe.servings}"),
+                      Text("Total Calories: ${recipe.cal}"),
+                    ]))
+                  ])),
+                ])))));
   }
 }
 
@@ -98,10 +116,18 @@ class Recipe {
   var type;
   var title;
   var url;
+  var img;
+  int servings;
+  int cal;
+  var labels;
 
   Recipe(this.type, this.title, this.url);
 
   Recipe.fromJson(this.type, Map<String, dynamic> json)
       : url = json["url"],
-        title = json["label"];
+        title = json["label"],
+        img = json["image"],
+        servings = json["yield"].round(),
+        cal = json["calories"].round(),
+        labels = json["dietLabels"] + json["healthLabels"];
 }
