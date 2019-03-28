@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 
 void main() => runApp(QuickMeals());
@@ -24,8 +26,9 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  var random = Random();
   var keys;
-  var breakfast, lunch, dinner;
+  Map<String, Recipe> meals = Map();
 
   @override
   void initState() {
@@ -46,54 +49,59 @@ class _HomeState extends State<Home> {
           title: Text("QuickMeals"),
         ),
         body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            _buildRecipe(breakfast),
-            _buildRecipe(lunch),
-            _buildRecipe(dinner),
+            _buildRecipe(meals["breakfast"]),
+            _buildRecipe(meals["lunch"]),
+            _buildRecipe(meals["dinner"]),
           ],
         ));
   }
 
-  fetchRecipe(query) async {
+  fetchRecipe(mealType) async {
+    setState(() => meals.remove(mealType));
+    var range = random.nextInt(100);
     var request =
-        "http://api.edamam.com/search?q=$query&app_id=${keys['appId']}&app_key=${keys['appKey']}&to=1";
-    /*
+        "http://api.edamam.com/search?q=$mealType&app_id=${keys['appId']}&app_key=${keys['appKey']}&from=$range&to=${range + 1}";
     var response = await http.get(request);
     if (response.statusCode == 200) {
-      var recipe =
-          Recipe.fromJson(jsonDecode(response.body)["hits"][0]["recipe"]);
-          */
-    var recipe = Recipe("www.google.com", "Food");
-    switch (query) {
-      case "breakfast":
-        setState(() => breakfast = recipe);
-        break;
-      case "lunch":
-        setState(() => lunch = recipe);
-        break;
-      case "dinner":
-        setState(() => dinner = recipe);
-    }
-    /*
+      var recipe = Recipe.fromJson(
+          mealType, jsonDecode(response.body)["hits"][0]["recipe"]);
+      //var recipe = Recipe(mealType, "Food", "http://google.com");
+      print("New Recipe: ${recipe.title}");
+      setState(() => meals[mealType] = recipe);
     } else {
       throw Exception("Failed to load recipe.");
     }
-    */
   }
 
   _buildRecipe(recipe) {
-    if (recipe == null) return CircularProgressIndicator();
-    return Text(recipe.title);
+    if (recipe == null) return Expanded(child: CircularProgressIndicator());
+    return Expanded(
+        flex: 1,
+        child: Dismissible(
+            key: Key(recipe.title),
+            onDismissed: (dir) {
+              setState(() => meals.remove(recipe.type));
+              fetchRecipe(recipe.type);
+            },
+            child: GestureDetector(
+                onTap: () async => await canLaunch(recipe.url)
+                    ? await launch(recipe.url)
+                    : throw 'Could not launch ${recipe.url}',
+                child: Card(child: Text(recipe.title)))));
   }
 }
 
 class Recipe {
-  var url;
+  var type;
   var title;
+  var url;
 
-  Recipe(this.url, this.title);
+  Recipe(this.type, this.title, this.url);
 
-  Recipe.fromJson(Map<String, dynamic> json)
+  Recipe.fromJson(this.type, Map<String, dynamic> json)
       : url = json["url"],
         title = json["label"];
 }
