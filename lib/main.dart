@@ -13,6 +13,7 @@ class QuickMeals extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "QuickMeals",
+      theme: ThemeData(fontFamily: 'Roboto'),
       home: Home(title: "QuickMeals"),
     );
   }
@@ -78,8 +79,10 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text("QuickMeals"),
-        ),
+            title: Row(children: <Widget>[
+          Text("QuickMeals"),
+          Image(image: AssetImage('assets/edamam_logo.png'))
+        ])),
         body: Column(
           children: <Widget>[
             _buildRecipe(_getRecipe("breakfast")),
@@ -107,24 +110,36 @@ class _HomeState extends State<Home> {
                     ? await launch(recipe.url)
                     : throw 'Could not launch ${recipe.url}',
                 child: Card(
-                    child: Row(children: <Widget>[
-                  Expanded(
-                      child: FadeInImage.memoryNetwork(
-                          placeholder: kTransparentImage, image: recipe.img)),
-                  Expanded(
-                      child: Column(children: <Widget>[
-                    Center(
-                        child: Text(
-                      recipe.title,
-                      textAlign: TextAlign.center,
-                    )),
-                    Container(
-                        child: Column(children: <Widget>[
-                      Text("Servings: ${recipe.servings}"),
-                      Text("Total Calories: ${recipe.cal}"),
-                    ]))
-                  ])),
-                ])))));
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                      Text(
+                        recipe.title,
+                        textAlign: TextAlign.start,
+                      ),
+                      Expanded(
+                          child: Row(children: <Widget>[
+                        Expanded(
+                            child: FadeInImage.memoryNetwork(
+                                placeholder: kTransparentImage,
+                                image: recipe.img)),
+                        Expanded(
+                            child: Column(children: <Widget>[
+                          Container(
+                              child: Column(children: <Widget>[
+                            Text("Servings: ${recipe.servings}"),
+                            Text("Total Calories: ${recipe.cal}"),
+                            _labels(recipe.labels)
+                          ]))
+                        ]))
+                      ])),
+                    ])))));
+  }
+
+  Widget _labels(labels) {
+    return Wrap(
+        children:
+            labels.map((label) => new Text(label)).toList().cast<Widget>());
   }
 }
 
