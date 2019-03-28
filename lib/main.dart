@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:transparent_image/transparent_image.dart';
 import 'package:http/http.dart' as http;
 
 void main() => runApp(QuickMeals());
@@ -28,7 +29,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   var random = Random();
   var keys;
-  Map<String, Recipe> meals = Map();
+  Map<String, List<Recipe>> meals = Map();
 
   @override
   void initState() {
@@ -36,10 +37,41 @@ class _HomeState extends State<Home> {
     var query = Firestore.instance.collection("keys").document("edamam").get();
     query.then((snapshot) {
       keys = snapshot.data;
-      fetchRecipe("breakfast");
-      fetchRecipe("lunch");
-      fetchRecipe("dinner");
+      _fetchRecipes("breakfast");
+      _fetchRecipes("lunch");
+      _fetchRecipes("dinner");
     });
+  }
+
+  _fetchRecipes(mealType) async {
+    setState(() => meals.remove(mealType));
+    var range = random.nextInt(100);
+    var request =
+        "http://api.edamam.com/search?q=$mealType&app_id=${keys['appId']}&app_key=${keys['appKey']}&from=$range&to=${range + 10}";
+    var response = await http.get(request);
+    if (response.statusCode == 200) {
+      List<Recipe> recipes = List();
+      for (var item in jsonDecode(response.body)["hits"]) {
+        var recipe = Recipe.fromJson(mealType, item["recipe"]);
+        //var recipe = Recipe(mealType, "Food", "http://google.com");
+        recipes.add(recipe);
+      }
+      print("loaded $mealType recipes");
+      setState(() => meals[mealType] = recipes);
+    } else {
+      throw Exception("Failed to load recipe.");
+    }
+  }
+
+  _getRecipe(type) {
+    try {
+      if (meals[type].length < 2) {
+        _fetchRecipes(type);
+      }
+      return meals[type].last;
+    } catch (e) {
+      return null;
+    }
   }
 
   @override
@@ -50,28 +82,11 @@ class _HomeState extends State<Home> {
         ),
         body: Column(
           children: <Widget>[
-            _buildRecipe(meals["breakfast"]),
-            _buildRecipe(meals["lunch"]),
-            _buildRecipe(meals["dinner"]),
+            _buildRecipe(_getRecipe("breakfast")),
+            _buildRecipe(_getRecipe("lunch")),
+            _buildRecipe(_getRecipe("dinner")),
           ],
         ));
-  }
-
-  fetchRecipe(mealType) async {
-    setState(() => meals.remove(mealType));
-    var range = random.nextInt(100);
-    var request =
-        "http://api.edamam.com/search?q=$mealType&app_id=${keys['appId']}&app_key=${keys['appKey']}&from=$range&to=${range + 1}";
-    var response = await http.get(request);
-    if (response.statusCode == 200) {
-      var recipe = Recipe.fromJson(
-          mealType, jsonDecode(response.body)["hits"][0]["recipe"]);
-      //var recipe = Recipe(mealType, "Food", "http://google.com");
-      print("New Recipe: ${recipe.title}");
-      setState(() => meals[mealType] = recipe);
-    } else {
-      throw Exception("Failed to load recipe.");
-    }
   }
 
   _buildRecipe(recipe) {
@@ -85,8 +100,7 @@ class _HomeState extends State<Home> {
         child: Dismissible(
             key: Key(recipe.title),
             onDismissed: (dir) {
-              setState(() => meals.remove(recipe.type));
-              fetchRecipe(recipe.type);
+              setState(() => meals[recipe.type].removeLast());
             },
             child: GestureDetector(
                 onTap: () async => await canLaunch(recipe.url)
@@ -94,7 +108,9 @@ class _HomeState extends State<Home> {
                     : throw 'Could not launch ${recipe.url}',
                 child: Card(
                     child: Row(children: <Widget>[
-                  Image.network(recipe.img),
+                  Expanded(
+                      child: FadeInImage.memoryNetwork(
+                          placeholder: kTransparentImage, image: recipe.img)),
                   Expanded(
                       child: Column(children: <Widget>[
                     Center(
