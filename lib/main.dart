@@ -13,7 +13,6 @@ class QuickMeals extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "QuickMeals",
-      theme: ThemeData(fontFamily: 'Roboto'),
       home: Home(title: "QuickMeals"),
     );
   }
@@ -54,10 +53,8 @@ class _HomeState extends State<Home> {
       List<Recipe> recipes = List();
       for (var item in jsonDecode(response.body)["hits"]) {
         var recipe = Recipe.fromJson(mealType, item["recipe"]);
-        //var recipe = Recipe(mealType, "Food", "http://google.com");
         recipes.add(recipe);
       }
-      print("loaded $mealType recipes");
       setState(() => meals[mealType] = recipes);
     } else {
       throw Exception("Failed to load recipe.");
@@ -79,17 +76,24 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-            title: Row(children: <Widget>[
-          Text("QuickMeals"),
-          Image(image: AssetImage('assets/edamam_logo.png'))
-        ])),
-        body: Column(
-          children: <Widget>[
-            _buildRecipe(_getRecipe("breakfast")),
-            _buildRecipe(_getRecipe("lunch")),
-            _buildRecipe(_getRecipe("dinner")),
-          ],
-        ));
+          title: Row(children: <Widget>[
+            Text("QuickMeals"),
+            Image(image: AssetImage('assets/edamam_logo.png'))
+          ]),
+        ),
+        body: Container(
+            margin: EdgeInsets.all(6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text("Breakfast"),
+                _buildRecipe(_getRecipe("breakfast")),
+                Text("Lunch"),
+                _buildRecipe(_getRecipe("lunch")),
+                Text("Dinner"),
+                _buildRecipe(_getRecipe("dinner")),
+              ],
+            )));
   }
 
   _buildRecipe(recipe) {
@@ -109,50 +113,38 @@ class _HomeState extends State<Home> {
                 onTap: () async => await canLaunch(recipe.url)
                     ? await launch(recipe.url)
                     : throw 'Could not launch ${recipe.url}',
-                child: Card(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                      Text(
-                        recipe.title,
-                        textAlign: TextAlign.start,
-                      ),
-                      Expanded(
-                          child: Row(children: <Widget>[
-                        Expanded(
-                            child: FadeInImage.memoryNetwork(
-                                placeholder: kTransparentImage,
-                                image: recipe.img)),
-                        Expanded(
-                            child: Column(children: <Widget>[
-                          Container(
-                              child: Column(children: <Widget>[
-                            Text("Servings: ${recipe.servings}"),
-                            Text("Total Calories: ${recipe.cal}"),
-                            _labels(recipe.labels)
-                          ]))
-                        ]))
-                      ])),
-                    ])))));
+                child: _recipeCard(recipe))));
   }
 
-  Widget _labels(labels) {
-    return Wrap(
-        children:
-            labels.map((label) => new Text(label)).toList().cast<Widget>());
+  Widget _recipeCard(recipe) {
+    return Card(
+        child: Row(children: <Widget>[
+      Expanded(
+          child: Container(
+              margin: EdgeInsets.all(2),
+              child: Column(children: <Widget>[
+                Flexible(
+                    flex: 1,
+                    child: Text(
+                      recipe.title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    )),
+                Spacer(flex: 1),
+                Flexible(flex: 1, child: Text("Serves ${recipe.servings}")),
+                Flexible(flex: 1, child: Text("${recipe.cal} Calories")),
+              ]))),
+      Expanded(
+          child: Container(
+              margin: EdgeInsets.all(2),
+              child: FadeInImage.memoryNetwork(
+                  placeholder: kTransparentImage, image: recipe.img))),
+    ]));
   }
 }
 
 class Recipe {
-  var type;
-  var title;
-  var url;
-  var img;
-  int servings;
-  int cal;
-  var labels;
-
-  Recipe(this.type, this.title, this.url);
+  var type, title, url, img, servings, cal, labels;
 
   Recipe.fromJson(this.type, Map<String, dynamic> json)
       : url = json["url"],
