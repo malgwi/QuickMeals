@@ -133,6 +133,7 @@ class _HomeState extends State<Home> {
                 Spacer(flex: 1),
                 Flexible(flex: 1, child: Text("Serves ${recipe.servings}")),
                 Flexible(flex: 1, child: Text("${recipe.cal} Calories")),
+                _labels(recipe.labels),
               ]))),
       Expanded(
           child: Container(
@@ -140,6 +141,19 @@ class _HomeState extends State<Home> {
               child: FadeInImage.memoryNetwork(
                   placeholder: kTransparentImage, image: recipe.img))),
     ]));
+  }
+
+  Widget _labels(labels) {
+    var icons = {
+      "Vegetarian": 0,
+      "Vegan": 0,
+    };
+    return Wrap(
+        children: labels
+            .map<Widget>((label) => icons[label] != null
+                ? Image(image: AssetImage("assets/icons/$label.png"))
+                : SizedBox(height: 48))
+            .toList());
   }
 }
 
