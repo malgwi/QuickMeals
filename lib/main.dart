@@ -57,7 +57,7 @@ class _HomeState extends State<Home> {
       }
       setState(() => meals[mealType] = recipes);
     } else {
-      throw Exception("Failed to load recipe.");
+      _fetchRecipes(mealType);
     }
   }
 
@@ -78,7 +78,7 @@ class _HomeState extends State<Home> {
         appBar: AppBar(
           title: Row(children: <Widget>[
             Text("QuickMeals"),
-            Image(image: AssetImage('assets/edamam_logo.png'))
+            Image(image: AssetImage('assets/edamam.png'))
           ]),
         ),
         body: Container(
@@ -129,6 +129,7 @@ class _HomeState extends State<Home> {
                       recipe.title,
                       textAlign: TextAlign.center,
                       style: TextStyle(fontWeight: FontWeight.bold),
+                      maxLines: 3,
                     )),
                 Spacer(flex: 1),
                 Flexible(flex: 1, child: Text("Serves ${recipe.servings}")),
@@ -147,12 +148,15 @@ class _HomeState extends State<Home> {
     var icons = {
       "Vegetarian": 0,
       "Vegan": 0,
+      "Gluten-Free": 0,
     };
     return Wrap(
         children: labels
             .map<Widget>((label) => icons[label] != null
-                ? Image(image: AssetImage("assets/icons/$label.png"))
-                : SizedBox(height: 48))
+                ? SizedBox(
+                    child: Image(image: AssetImage("assets/icons/$label.png")),
+                    height: 24)
+                : SizedBox(height: 24))
             .toList());
   }
 }
