@@ -12,16 +12,13 @@ class QuickMeals extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "QuickMeals",
-      home: Home(title: "QuickMeals"),
-    );
+        title: "QuickMeals",
+        home: Home(),
+        theme: ThemeData(primaryColor: Color(0xFFF5B512)));
   }
 }
 
 class Home extends StatefulWidget {
-  Home({Key key, this.title}) : super(key: key);
-  final String title;
-
   @override
   _HomeState createState() => _HomeState();
 }
@@ -82,72 +79,73 @@ class _HomeState extends State<Home> {
           ]),
         ),
         body: Container(
-            margin: EdgeInsets.all(6),
+            margin: EdgeInsets.all(8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text("Breakfast"),
-                _buildRecipe(_getRecipe("breakfast")),
+                _buildRecipe("breakfast"),
                 Text("Lunch"),
-                _buildRecipe(_getRecipe("lunch")),
+                _buildRecipe("lunch"),
                 Text("Dinner"),
-                _buildRecipe(_getRecipe("dinner")),
+                _buildRecipe("dinner"),
               ],
             )));
   }
 
-  _buildRecipe(recipe) {
+  Widget _buildRecipe(type) {
+    var recipe = _getRecipe(type);
     if (recipe == null) {
       return Expanded(
           child: Container(
               alignment: Alignment.center, child: CircularProgressIndicator()));
     }
     return Expanded(
-        flex: 1,
-        child: Dismissible(
-            key: Key(recipe.title),
-            onDismissed: (dir) {
-              setState(() => meals[recipe.type].removeLast());
-            },
-            child: GestureDetector(
-                onTap: () async => await canLaunch(recipe.url)
-                    ? await launch(recipe.url)
-                    : throw 'Could not launch ${recipe.url}',
+        child: InkWell(
+            onTap: () async => await canLaunch(recipe.url)
+                ? await launch(recipe.url)
+                : throw 'Could not launch ${recipe.url}',
+            child: Dismissible(
+                key: Key(recipe.title),
+                onDismissed: (dir) {
+                  setState(() => meals[recipe.type].removeLast());
+                },
                 child: _recipeCard(recipe))));
   }
 
   Widget _recipeCard(recipe) {
     return Card(
+        clipBehavior: Clip.hardEdge,
         child: Row(children: <Widget>[
-      Expanded(
-          child: Container(
-              margin: EdgeInsets.all(2),
-              child: Column(children: <Widget>[
-                Flexible(
-                    flex: 1,
-                    child: Text(
-                      recipe.title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                      maxLines: 3,
-                    )),
-                Spacer(flex: 1),
-                Flexible(flex: 1, child: Text("Serves ${recipe.servings}")),
-                Flexible(flex: 1, child: Text("${recipe.cal} Calories")),
-                _labels(recipe.labels),
-              ]))),
-      Expanded(
-          child: Container(
-              margin: EdgeInsets.all(2),
-              child: FadeInImage.memoryNetwork(
-                  placeholder: kTransparentImage, image: recipe.img))),
-    ]));
+          Expanded(
+              child: Container(
+                  margin: EdgeInsets.all(7),
+                  child: Column(children: <Widget>[
+                    Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          recipe.title,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                          maxLines: 3,
+                        )),
+                    Spacer(flex: 1),
+                    _labels(recipe.labels),
+                    Text("${recipe.servings} Servings"),
+                    Text("${recipe.cal} Calories"),
+                  ]))),
+          Expanded(
+              child: Container(
+                  alignment: Alignment.centerRight,
+                  child: FadeInImage.memoryNetwork(
+                      placeholder: kTransparentImage, image: recipe.img))),
+        ]));
   }
 
   Widget _labels(labels) {
     var icons = {
       "Vegetarian": 0,
       "Vegan": 0,
+      "Low-Carb": 0,
       "Gluten-Free": 0,
     };
     return Wrap(
@@ -155,8 +153,8 @@ class _HomeState extends State<Home> {
             .map<Widget>((label) => icons[label] != null
                 ? SizedBox(
                     child: Image(image: AssetImage("assets/icons/$label.png")),
-                    height: 24)
-                : SizedBox(height: 24))
+                    height: 30)
+                : SizedBox())
             .toList());
   }
 }

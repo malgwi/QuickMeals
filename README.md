@@ -1,16 +1,31 @@
-# quick_meals
+# QuickMeals
 
-A new Flutter project.
+Not sure what to cook today? Get some quick suggestions from QuickMeals.
+
+![](demo.gif)
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Prerequisites
+- [Flutter](https://flutter.dev/docs/get-started/install)
+- An Android phone with [USB debugging enabled](https://developer.android.com/studio/debug/dev-options)
 
-A few resources to get you started if this is your first Flutter project:
+### Installing
+```
+git clone https://github.com/tchell/QuickMeals.git quick_meals/
+cd quick_meals
+flutter run --release [-d <your device>]
+```
 
-- [Lab: Write your first Flutter app](https://flutter.io/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.io/docs/cookbook)
+### Built with
+- [Flutter](https://flutter.dev)
+- [Edamam](https://www.edamam.com/)
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+### Authors
+- Created by Tanner Chell for the Flutter Create contest
+
+### License
+This project is licensed under the BSD 3-Clause License - see LICENSE for details
+
+### Acknowledgments
+- Thanks to David Buss and Andrew Chell for their valuable opinions.
