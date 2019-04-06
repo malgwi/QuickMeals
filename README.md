@@ -2,7 +2,7 @@
 
 Not sure what to cook today? Get some quick suggestions from QuickMeals.
 
-<img src="demo.gif" alt="Demo gif" height="720" width="480"></img>
+<img src="demo.gif" alt="Demo gif" height="640px" width="360px"></img>
 
 ## Getting Started
 
